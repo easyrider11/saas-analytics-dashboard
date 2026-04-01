@@ -5,8 +5,9 @@ time-boxed front-end technical assessment. It presents mock executive metrics
 for revenue, user growth, subscription mix, and conversion health in a clean,
 deployable React application.
 
-<!-- Replace with an actual screenshot after deploying -->
-![Dashboard Screenshot](docs/screenshot.png)
+## Live Demo
+
+[saas-analytics-dashboard-three.vercel.app](https://saas-analytics-dashboard-three.vercel.app)
 
 ## Project Overview
 
