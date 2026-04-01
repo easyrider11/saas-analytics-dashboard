@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 
 import DashboardSkeleton from './components/DashboardSkeleton'
+import EmptyState from './components/EmptyState'
 import ErrorState from './components/ErrorState'
 import FilterBar from './components/FilterBar'
 import KpiCard from './components/KpiCard'
@@ -62,9 +63,11 @@ function App() {
     setSubscriptionTier('all')
   }
 
+  const hasData = filteredData.length > 0
+
   return (
-    <div className="min-h-screen bg-slate-100">
-      <div className="relative isolate overflow-hidden">
+    <div className="flex min-h-screen flex-col bg-slate-100">
+      <div className="relative isolate flex-1 overflow-hidden">
         <div className="absolute inset-x-0 top-0 -z-10 h-[420px] bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.16),transparent_36%),radial-gradient(circle_at_top_right,rgba(20,184,166,0.16),transparent_32%),linear-gradient(180deg,#f8fafc_0%,#f1f5f9_100%)]" />
 
         <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
@@ -148,45 +151,59 @@ function App() {
                 subscriptionTier={subscriptionTier}
               />
 
-              <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                {kpiMetrics.map((metric) => (
-                  <KpiCard
-                    key={metric.label}
-                    helperText={metric.helperText}
-                    label={metric.label}
-                    tone={metric.tone}
-                    trendDirection={metric.trendDirection}
-                    trendText={metric.trendText}
-                    value={metric.value}
-                  />
-                ))}
-              </section>
+              {!hasData ? (
+                <EmptyState />
+              ) : (
+                <>
+                  <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                    {kpiMetrics.map((metric) => (
+                      <KpiCard
+                        key={metric.label}
+                        helperText={metric.helperText}
+                        label={metric.label}
+                        tone={metric.tone}
+                        trendDirection={metric.trendDirection}
+                        trendText={metric.trendText}
+                        value={metric.value}
+                      />
+                    ))}
+                  </section>
 
-              <section className="grid gap-6 xl:grid-cols-[1.45fr_1fr]">
-                <RevenueLineChart
-                  data={revenueChartData}
-                  subscriptionTier={subscriptionTier}
-                />
-                <UserGrowthBarChart
-                  data={userGrowthChartData}
-                  subscriptionTier={subscriptionTier}
-                />
-              </section>
+                  <section className="grid gap-6 xl:grid-cols-[1.45fr_1fr]">
+                    <RevenueLineChart
+                      data={revenueChartData}
+                      subscriptionTier={subscriptionTier}
+                    />
+                    <UserGrowthBarChart
+                      data={userGrowthChartData}
+                      subscriptionTier={subscriptionTier}
+                    />
+                  </section>
 
-              <section className="grid gap-6 xl:grid-cols-[1fr_1.45fr]">
-                <SubscriptionDonutChart
-                  subscriptionTier={subscriptionTier}
-                  summary={subscriptionSummary}
-                />
-                <ConversionChart
-                  data={conversionChartData}
-                  subscriptionTier={subscriptionTier}
-                />
-              </section>
+                  <section className="grid gap-6 xl:grid-cols-[1fr_1.45fr]">
+                    <SubscriptionDonutChart
+                      subscriptionTier={subscriptionTier}
+                      summary={subscriptionSummary}
+                    />
+                    <ConversionChart
+                      data={conversionChartData}
+                      subscriptionTier={subscriptionTier}
+                    />
+                  </section>
+                </>
+              )}
             </div>
           )}
         </main>
       </div>
+
+      <footer className="border-t border-slate-200 bg-white px-6 py-3">
+        <p className="mx-auto max-w-7xl text-center text-xs text-slate-400">
+          Last updated: mock data through Mar 2026 &middot; Revenue, signups,
+          and conversion are product-wide (not split by tier in this mock
+          dataset)
+        </p>
+      </footer>
     </div>
   )
 }

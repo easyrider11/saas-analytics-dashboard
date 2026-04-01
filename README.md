@@ -5,6 +5,9 @@ time-boxed front-end technical assessment. It presents mock executive metrics
 for revenue, user growth, subscription mix, and conversion health in a clean,
 deployable React application.
 
+<!-- Replace with an actual screenshot after deploying -->
+![Dashboard Screenshot](docs/screenshot.png)
+
 ## Project Overview
 
 - Executive-style light-mode analytics dashboard
@@ -17,12 +20,14 @@ deployable React application.
 
 - Initial loading skeleton on first render
 - Simulated error state with retry recovery
+- Empty state when filters yield no data
 - KPI cards with lightweight trend indicators
 - Revenue trend line chart
 - User growth bar chart
 - Subscription mix donut chart
 - Conversion rate line chart
 - Controlled filters for date range and subscription tier
+- Footer with data freshness note
 
 ## Tech Stack
 
@@ -34,12 +39,14 @@ deployable React application.
 
 ## Mock Data Assumptions
 
-- Data models a fictional SaaS company over eight monthly periods
-- Free users are the largest tier, followed by Pro and Enterprise
+- Data models a fictional SaaS company over ten monthly periods (Jun 2025 -- Mar 2026)
+- Free users are the largest tier (~87%), followed by Pro (~11%) and Enterprise (~2%)
 - Revenue tracks paid-tier growth rather than free-user volume
 - Active users, signups, and conversion rates trend upward with slight variance
+- A small December dip reflects seasonal patterns
 - Revenue, signups, and conversion remain product-wide because the mock dataset
-  does not split those metrics by subscription tier
+  does not split those metrics by subscription tier -- this is called out in the
+  UI footer and in chart subtitles to avoid misleading anyone reviewing the dashboard
 
 ## Filtering Behavior
 
@@ -49,6 +56,24 @@ deployable React application.
   and the subscription breakdown chart
 - Product-wide charts stay visible under tier focus and are labeled clearly to
   avoid implying unsupported tier-level revenue or signup data
+- Filters apply instantly on change -- no "Apply" button needed for a small
+  local dataset
+
+## Design Decisions
+
+- **Instant filters, no "Apply" button.** With a small local dataset, there is
+  no reason to batch filter changes. Immediate feedback feels more responsive.
+- **Product-wide metrics stay unfiltered under tier focus.** Rather than
+  fabricating per-tier revenue or conversion breakdowns, those charts always show
+  the full picture. Only views where tier filtering is meaningful (subscriber
+  counts, donut chart) respond to the tier filter. Chart subtitles explain this.
+- **Skeleton mirrors the real layout.** The loading skeleton uses the same grid
+  structure as the dashboard so content does not shift when data appears.
+- **No external state library.** `useState` in a single component tree is
+  sufficient for this scope and keeps the dependency footprint minimal.
+- **Footer transparency.** A persistent footer note clarifies that data is mock
+  and that revenue/signups/conversion are product-wide, so reviewers see this
+  context without reading the source code.
 
 ## Setup
 
