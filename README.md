@@ -1,84 +1,113 @@
 # SaaS Analytics Dashboard
 
-A polished, interactive executive analytics dashboard for a fictional SaaS company. Built as a single-page React application with mock data, designed for a time-boxed frontend technical assessment.
+Northstar Cloud Analytics is a polished single-page SaaS dashboard built for a
+time-boxed front-end technical assessment. It presents mock executive metrics
+for revenue, user growth, subscription mix, and conversion health in a clean,
+deployable React application.
+
+## Project Overview
+
+- Executive-style light-mode analytics dashboard
+- Local mock data only, with no backend or routing
+- Interactive date-range and subscription-tier filtering
+- Responsive KPI cards and charts for desktop, tablet, and mobile
+- Includes loading and recoverable error states for assessment completeness
 
 ## Features
 
-- **KPI cards** with trend indicators (revenue, signups, active users, conversion rate)
-- **Interactive filters** — date range (All / 6 months / 3 months) and subscription tier (All / Free / Pro / Enterprise)
-- **Four charts** — revenue trend line, user growth by plan, subscription breakdown donut, conversion rate bars
-- **Loading state** — shimmer skeleton UI on initial render
-- **Error handling** — simulated error state with retry, triggered via a "Simulate Error" button
-- **Responsive** — adapts from mobile to desktop with a clean grid layout
-- **Light theme** — restrained, professional executive dashboard aesthetic
+- Initial loading skeleton on first render
+- Simulated error state with retry recovery
+- KPI cards with lightweight trend indicators
+- Revenue trend line chart
+- User growth bar chart
+- Subscription mix donut chart
+- Conversion rate line chart
+- Controlled filters for date range and subscription tier
 
 ## Tech Stack
 
-| Layer         | Tool                |
-| ------------- | ------------------- |
-| Framework     | React 19 + TypeScript |
-| Build         | Vite                |
-| Styling       | Tailwind CSS v4     |
-| Charts        | Recharts            |
+- React
+- Vite
+- TypeScript
+- Tailwind CSS
+- Recharts
 
-No backend, no routing, no external API calls. All data is local mock data.
+## Mock Data Assumptions
 
-## Setup
-
-```bash
-npm install
-```
-
-## Development
-
-```bash
-npm run dev
-```
-
-Opens at [http://localhost:5173](http://localhost:5173).
-
-## Build
-
-```bash
-npm run build
-```
-
-Output is written to `dist/`.
-
-## Preview Production Build
-
-```bash
-npm run preview
-```
-
-## Deploy to Vercel
-
-1. Push this repo (or the `dashboard/` directory) to GitHub.
-2. Import the project at [vercel.com/new](https://vercel.com/new).
-3. Vercel auto-detects Vite. No configuration needed.
-4. Click **Deploy**.
-
-Or via CLI:
-
-```bash
-npx vercel
-```
-
-## Mock Data
-
-Ten months of SaaS metrics (Jun 2025 -- Mar 2026) are defined in `src/data/mockData.ts`. The data is designed to feel realistic:
-
-- **Free** tier is the largest user segment, **Pro** is mid-range, **Enterprise** is smallest
-- Revenue correlates with paid tiers (Pro ~35%, Enterprise ~65% weighted split)
-- Active users grow in proportion to signups with a slight holiday dip in December
-- Conversion rate varies between 12--14%, trending slightly upward
+- Data models a fictional SaaS company over eight monthly periods
+- Free users are the largest tier, followed by Pro and Enterprise
+- Revenue tracks paid-tier growth rather than free-user volume
+- Active users, signups, and conversion rates trend upward with slight variance
+- Revenue, signups, and conversion remain product-wide because the mock dataset
+  does not split those metrics by subscription tier
 
 ## Filtering Behavior
 
-- **Date range** slices the dataset to the last N months. All KPIs, charts, and trend indicators update.
-- **Tier filter** adjusts tier-specific views: revenue KPI shows estimated plan share, the users KPI switches to that tier's count, and the donut chart shows a start-vs-now comparison for the selected tier.
-- Charts that are not tier-specific (revenue line, conversion bars) continue to show full data to avoid misleading breakdowns.
+- `Date range` filters the active dataset used by KPI cards, summary panels, and
+  all charts
+- `Subscription tier` focuses tier-specific summaries such as subscriber counts
+  and the subscription breakdown chart
+- Product-wide charts stay visible under tier focus and are labeled clearly to
+  avoid implying unsupported tier-level revenue or signup data
+
+## Setup
+
+1. Install dependencies:
+
+   ```bash
+   npm install
+   ```
+
+## Development Scripts
+
+- Start the local dev server:
+
+  ```bash
+  npm run dev
+  ```
+
+- Create a production build:
+
+  ```bash
+  npm run build
+  ```
+
+- Run ESLint:
+
+  ```bash
+  npm run lint
+  ```
+
+- Preview the production build locally:
+
+  ```bash
+  npm run preview
+  ```
+
+## Deployment to Vercel
+
+This project is a standard Vite static app and can be deployed directly to
+Vercel.
+
+1. Push the repository to GitHub, GitLab, or Bitbucket.
+2. Import the project into Vercel.
+3. Vercel should detect the framework automatically.
+4. Use the default settings or confirm:
+
+   - Build command: `npm run build`
+   - Output directory: `dist`
+
+5. Deploy.
+
+You can also deploy from the CLI with:
+
+```bash
+vercel
+```
 
 ## Assessment Note
 
-This project was designed and built for a time-boxed frontend assessment. The scope is intentionally limited to demonstrate clean component architecture, TypeScript usage, data-driven UI, and responsive design -- not production-grade infrastructure.
+The implementation intentionally stays simple and interview-friendly. It is
+structured to demonstrate component design, state handling, reusable utility
+logic, loading/error UX, and responsive dashboard polish within a practical
+assessment time box.

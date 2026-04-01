@@ -1,155 +1,194 @@
-import { useState, useMemo, useEffect } from "react";
-import { monthlyData } from "./data/mockData";
-import type { DateRange, Tier } from "./types";
-import {
-  sliceByDateRange,
-  totalRevenue,
-  totalSignups,
-  latestActiveUsers,
-  latestTierUsers,
-  averageConversionRate,
-  computeTrend,
-  tierRevenue,
-  formatCurrency,
-  formatNumber,
-} from "./utils/dashboard";
-import { KpiCard } from "./components/KpiCard";
-import { FilterBar } from "./components/FilterBar";
-import { RevenueLineChart } from "./components/charts/RevenueLineChart";
-import { UserGrowthBarChart } from "./components/charts/UserGrowthBarChart";
-import { SubscriptionDonutChart } from "./components/charts/SubscriptionDonutChart";
-import { ConversionChart } from "./components/charts/ConversionChart";
-import { DashboardSkeleton } from "./components/Skeleton";
-import { ErrorState } from "./components/ErrorState";
+import { useEffect, useState } from 'react'
 
-export default function App() {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [dateRange, setDateRange] = useState<DateRange>("all");
-  const [tier, setTier] = useState<Tier>("all");
+import DashboardSkeleton from './components/DashboardSkeleton'
+import ErrorState from './components/ErrorState'
+import FilterBar from './components/FilterBar'
+import KpiCard from './components/KpiCard'
+import ConversionChart from './components/charts/ConversionChart'
+import RevenueLineChart from './components/charts/RevenueLineChart'
+import SubscriptionDonutChart from './components/charts/SubscriptionDonutChart'
+import UserGrowthBarChart from './components/charts/UserGrowthBarChart'
+import { mockMonthlyData } from './data/mockData'
+import type { DateRangeOption, SubscriptionTier } from './types'
+import {
+  getDateRangeLabel,
+  getDateRangeOptionLabel,
+  getHeadlineMetric,
+  getKpiMetrics,
+  getLatestMonth,
+  getSubscriptionSummary,
+  getSubscriptionTierLabel,
+  prepareConversionChartData,
+  prepareRevenueChartData,
+  prepareUserGrowthChartData,
+  sliceDataByDateRange,
+} from './utils/dashboard'
+
+const INITIAL_LOADING_DELAY_MS = 900
+
+function App() {
+  const [dateRange, setDateRange] = useState<DateRangeOption>('all')
+  const [subscriptionTier, setSubscriptionTier] =
+    useState<SubscriptionTier>('all')
+  const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
 
   useEffect(() => {
-    const delay = 800 + Math.random() * 400;
-    const id = setTimeout(() => setLoading(false), delay);
-    return () => clearTimeout(id);
-  }, []);
+    const timeoutId = window.setTimeout(() => {
+      setIsLoading(false)
+    }, INITIAL_LOADING_DELAY_MS)
 
-  const filteredData = useMemo(
-    () => sliceByDateRange(monthlyData, dateRange),
-    [dateRange]
-  );
+    return () => window.clearTimeout(timeoutId)
+  }, [])
 
-  // KPI values
-  const revenueKpi = totalRevenue(filteredData, tier);
-  const usersKpi =
-    tier === "all"
-      ? latestActiveUsers(filteredData)
-      : latestTierUsers(filteredData, tier);
-  const usersLabel = tier === "all" ? "Active Users" : `${capitalize(tier)} Users`;
+  const filteredData = sliceDataByDateRange(mockMonthlyData, dateRange)
+  const latestMetrics = getLatestMonth(filteredData)
+  const kpiMetrics = getKpiMetrics(filteredData, subscriptionTier)
+  const headlineMetric = getHeadlineMetric(filteredData, subscriptionTier)
+  const subscriptionSummary = getSubscriptionSummary(
+    filteredData,
+    subscriptionTier,
+  )
+  const revenueChartData = prepareRevenueChartData(filteredData)
+  const userGrowthChartData = prepareUserGrowthChartData(filteredData)
+  const conversionChartData = prepareConversionChartData(filteredData)
+  const tierFilterLabel =
+    subscriptionTier === 'all'
+      ? 'All tiers'
+      : `${getSubscriptionTierLabel(subscriptionTier)} focus`
 
-  // Trends: compare last two months in the filtered range
-  const trends = useMemo(() => {
-    if (filteredData.length < 2) return null;
-    const curr = filteredData[filteredData.length - 1];
-    const prev = filteredData[filteredData.length - 2];
-    return {
-      revenue: computeTrend(tierRevenue(curr, tier), tierRevenue(prev, tier)),
-      signups: computeTrend(curr.signups, prev.signups),
-      users: computeTrend(
-        tier === "all"
-          ? curr.activeUsers
-          : latestTierUsers([prev, curr], tier),
-        tier === "all"
-          ? prev.activeUsers
-          : latestTierUsers([prev], tier)
-      ),
-      conversion: computeTrend(curr.conversionRate, prev.conversionRate),
-    };
-  }, [filteredData, tier]);
-
-  if (loading) return <DashboardSkeleton />;
-
-  if (error) {
-    return (
-      <ErrorState
-        message={error}
-        onRetry={() => setError(null)}
-      />
-    );
+  const resetFilters = () => {
+    setDateRange('all')
+    setSubscriptionTier('all')
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="border-b border-gray-200 bg-white px-6 py-5 sm:py-6">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-gray-900">
-              Analytics Dashboard
-            </h1>
-            <p className="mt-1 text-sm text-gray-500">
-              SaaS performance overview &mdash; {filteredData[0].month} to{" "}
-              {filteredData[filteredData.length - 1].month}
-            </p>
-          </div>
-          <button
-            onClick={() =>
-              setError(
-                "Failed to fetch analytics data. The upstream metrics service is unavailable. Please try again."
-              )
-            }
-            className="rounded-md border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-400 transition-colors hover:border-red-300 hover:text-red-500"
-          >
-            Simulate Error
-          </button>
-        </div>
-      </header>
+    <div className="min-h-screen bg-slate-100">
+      <div className="relative isolate overflow-hidden">
+        <div className="absolute inset-x-0 top-0 -z-10 h-[420px] bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.16),transparent_36%),radial-gradient(circle_at_top_right,rgba(20,184,166,0.16),transparent_32%),linear-gradient(180deg,#f8fafc_0%,#f1f5f9_100%)]" />
 
-      <main className="mx-auto max-w-7xl space-y-6 p-4 sm:p-6">
-        <FilterBar
-          dateRange={dateRange}
-          tier={tier}
-          onDateRangeChange={setDateRange}
-          onTierChange={setTier}
-        />
+        <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+          {!isLoading && !hasError ? (
+            <div className="mb-4 flex justify-end">
+              <button
+                type="button"
+                className="rounded-2xl border border-rose-200 bg-white px-4 py-2.5 text-sm font-semibold text-rose-700 shadow-sm transition hover:border-rose-300 hover:bg-rose-50"
+                onClick={() => setHasError(true)}
+              >
+                Simulate Error
+              </button>
+            </div>
+          ) : null}
 
-        <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <KpiCard
-            title="Total Revenue"
-            value={formatCurrency(revenueKpi)}
-            subtitle={tier === "all" ? "All plans" : `${capitalize(tier)} plan share`}
-            trend={trends?.revenue}
-          />
-          <KpiCard
-            title="Total Signups"
-            value={formatNumber(totalSignups(filteredData))}
-            subtitle="New user registrations"
-            trend={trends?.signups}
-          />
-          <KpiCard
-            title={usersLabel}
-            value={formatNumber(usersKpi)}
-            subtitle="Latest month in range"
-            trend={trends?.users}
-          />
-          <KpiCard
-            title="Avg Conversion Rate"
-            value={`${averageConversionRate(filteredData)}%`}
-            subtitle="Free to paid"
-            trend={trends?.conversion}
-          />
-        </section>
+          {isLoading ? (
+            <DashboardSkeleton />
+          ) : hasError ? (
+            <ErrorState onRetry={() => setHasError(false)} />
+          ) : (
+            <div className="space-y-6">
+              <section className="grid gap-6 lg:grid-cols-[1.65fr_1fr]">
+                <div className="dashboard-card interactive-card p-6 sm:p-8">
+                  <span className="inline-flex rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-sky-700">
+                    Executive dashboard
+                  </span>
+                  <h1 className="mt-5 text-4xl font-semibold tracking-tight text-slate-900 sm:text-5xl">
+                    Northstar Cloud Analytics
+                  </h1>
+                  <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">
+                    A polished SaaS performance overview covering revenue,
+                    acquisition, subscriber mix, and conversion health across the
+                    currently selected reporting window.
+                  </p>
 
-        <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <RevenueLineChart data={filteredData} />
-          <UserGrowthBarChart data={filteredData} />
-          <SubscriptionDonutChart data={filteredData} tier={tier} />
-          <ConversionChart data={filteredData} />
-        </section>
-      </main>
+                  <div className="mt-6 flex flex-wrap gap-2">
+                    <span className="rounded-full bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600 ring-1 ring-slate-200">
+                      {getDateRangeOptionLabel(dateRange)}
+                    </span>
+                    <span className="rounded-full bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600 ring-1 ring-slate-200">
+                      {tierFilterLabel}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
+                  <div className="dashboard-card interactive-card p-5">
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                      Reporting window
+                    </p>
+                    <p className="mt-3 text-2xl font-semibold tracking-tight text-slate-900">
+                      {getDateRangeLabel(filteredData)}
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-slate-500">
+                      Preset: {getDateRangeOptionLabel(dateRange)}. Focus:{' '}
+                      {tierFilterLabel}. Showing {filteredData.length} months
+                      ending in {latestMetrics.month}.
+                    </p>
+                  </div>
+
+                  <div className="dashboard-card interactive-card p-5">
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                      {headlineMetric.label}
+                    </p>
+                    <p className="mt-3 text-2xl font-semibold tracking-tight text-slate-900">
+                      {headlineMetric.value}
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-slate-500">
+                      {headlineMetric.helperText}
+                    </p>
+                  </div>
+                </div>
+              </section>
+
+              <FilterBar
+                dateRange={dateRange}
+                monthsShown={filteredData.length}
+                onDateRangeChange={setDateRange}
+                onReset={resetFilters}
+                onSubscriptionTierChange={setSubscriptionTier}
+                subscriptionTier={subscriptionTier}
+              />
+
+              <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                {kpiMetrics.map((metric) => (
+                  <KpiCard
+                    key={metric.label}
+                    helperText={metric.helperText}
+                    label={metric.label}
+                    tone={metric.tone}
+                    trendDirection={metric.trendDirection}
+                    trendText={metric.trendText}
+                    value={metric.value}
+                  />
+                ))}
+              </section>
+
+              <section className="grid gap-6 xl:grid-cols-[1.45fr_1fr]">
+                <RevenueLineChart
+                  data={revenueChartData}
+                  subscriptionTier={subscriptionTier}
+                />
+                <UserGrowthBarChart
+                  data={userGrowthChartData}
+                  subscriptionTier={subscriptionTier}
+                />
+              </section>
+
+              <section className="grid gap-6 xl:grid-cols-[1fr_1.45fr]">
+                <SubscriptionDonutChart
+                  subscriptionTier={subscriptionTier}
+                  summary={subscriptionSummary}
+                />
+                <ConversionChart
+                  data={conversionChartData}
+                  subscriptionTier={subscriptionTier}
+                />
+              </section>
+            </div>
+          )}
+        </main>
+      </div>
     </div>
-  );
+  )
 }
 
-function capitalize(s: string): string {
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}
+export default App
